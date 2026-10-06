@@ -24,7 +24,21 @@ Operator directed, over one conversation on europa (mesh lane estate/w7:p7):
 
 ## Verification (this session)
 
-- `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo test`,
-  `cargo fmt --check`: results recorded below as they land.
-- Live smoke on europa: `norn record` against the estate session, watching
-  cerebral-work/cortex (two panes: opencode w7:p1, omp w7:p7).
+- Gates: `cargo build`, `clippy -D warnings`, `cargo test` (12/12),
+  `cargo fmt --check` — all green.
+- Live on europa, estate session: `norn record` captured the omp pane
+  (w7:p7) streaming real work into the feed and the saga narrative;
+  `skald view` tailed it; `saga read` printed it; the plugin action opened
+  a real skald pane (w7:pA) in the estate tab.
+- The first build captured nothing for ~20 minutes of live work: agent TUIs
+  keep a fixed input/status frame at the bottom, so prev's suffix never
+  matched curr's prefix and every real scroll was dropped as a "repaint".
+  Fixed by stripping the common trailing frame before the overlap diff
+  (tests: `scroll_past_a_fixed_frame_appends_the_new_lines`,
+  `a_frame_only_change_appends_nothing`). This is exactly why the rule is
+  "run it live before you believe it".
+- Also found: the estate opencode lane (w7:p1) is wedged — "Invalid model
+  name passed in model=nvidia/NVIDIA-Nemotron-3-Ultra-550B"; prompts error
+  instantly and nothing renders. Reported to the babysitting thread.
+- Recorder still needs a real supervisor (LaunchAgent) — running under
+  nohup for now; that's the operator's install step.
