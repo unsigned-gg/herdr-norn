@@ -56,6 +56,21 @@ pub fn new_lines<'a>(prev: &[String], curr: &'a [String]) -> &'a [String] {
     if curr.is_empty() || prev == curr || prev.is_empty() {
         return &[];
     }
+    // Agent TUIs keep a fixed frame at the bottom (input box, status bar):
+    // lines identical at the end of both screens are chrome, not scrollback.
+    // Strip the common suffix or no suffix/prefix overlap can ever match and
+    // every genuine scroll would be dropped as a "repaint".
+    let mut tail = 0;
+    while tail < prev.len().min(curr.len())
+        && prev[prev.len() - 1 - tail] == curr[curr.len() - 1 - tail]
+    {
+        tail += 1;
+    }
+    let prev = &prev[..prev.len() - tail];
+    let curr = &curr[..curr.len() - tail];
+    if curr.is_empty() {
+        return &[]; // the only change was inside the frame itself
+    }
     let top = prev.len().min(curr.len());
     for k in (1..=top).rev() {
         if prev[prev.len() - k..] == curr[..k] {
@@ -108,6 +123,31 @@ mod tests {
         let prev = v(&["a", "b", "c", "d"]);
         let curr = v(&["c", "d", "e"]);
         assert_eq!(new_lines(&prev, &curr), &v(&["e"]));
+    }
+
+    #[test]
+    fn scroll_past_a_fixed_frame_appends_the_new_lines() {
+        // The agent-TUI case: transcript scrolls while the input/status frame
+        // at the bottom stays byte-identical. Without frame stripping the
+        // overlap never matches and every genuine scroll is dropped.
+        let frame = ["╭─ input ──╮", "│          │", "╰──────────╯"];
+        let mut prev: Vec<String> = ["t1", "t2", "t3"].iter().map(|s| s.to_string()).collect();
+        prev.extend(frame.iter().map(|s| s.to_string()));
+        let mut curr: Vec<String> = ["t2", "t3", "t4", "t5"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        curr.extend(frame.iter().map(|s| s.to_string()));
+        assert_eq!(new_lines(&prev, &curr), &v(&["t4", "t5"]));
+    }
+
+    #[test]
+    fn a_frame_only_change_appends_nothing() {
+        // Status text flips inside the frame; the transcript is untouched.
+        // Frame content is chrome: recording it would spam every poll.
+        let prev = v(&["t1", "t2", "status: working"]);
+        let curr = v(&["t1", "t2", "status: idle"]);
+        assert!(new_lines(&prev, &curr).is_empty());
     }
 
     #[test]

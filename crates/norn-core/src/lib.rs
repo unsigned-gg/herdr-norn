@@ -181,10 +181,24 @@ pub fn append_event(cfg: &Config, ev: &PaneEvent) -> std::io::Result<()> {
 /// One pass over the roster. Returns the events appended.
 pub fn poll_once(cfg: &Config, seen: &mut HashMap<String, Vec<String>>) -> Vec<PaneEvent> {
     let mut events = vec![];
-    for entry in roster(cfg) {
+    let debug = std::env::var_os("NORN_DEBUG").is_some();
+    let entries = roster(cfg);
+    if debug {
+        eprintln!("norn debug: roster={}", entries.len());
+    }
+    for entry in entries {
         let curr = read_pane(cfg, &entry.pane_id);
         let prev = seen.entry(entry.pane_id.clone()).or_default();
         let fresh: Vec<String> = new_lines(prev, &curr).to_vec();
+        if debug {
+            eprintln!(
+                "norn debug: {} read={} prev={} fresh={}",
+                entry.pane_id,
+                curr.len(),
+                prev.len(),
+                fresh.len()
+            );
+        }
         *prev = curr;
         if fresh.is_empty() {
             continue;
