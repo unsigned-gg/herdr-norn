@@ -1,0 +1,5 @@
+# moon workspace — thin wrapper over the cargo workspace; the Makefile and
+# cargo are the source of truth, moon is the estate's orchestration view.
+$schema: "https://moonrepo.dev/schemas/workspace.json"
+projects:
+  - "crates/*"

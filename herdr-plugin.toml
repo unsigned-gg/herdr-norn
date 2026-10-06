@@ -1,0 +1,67 @@
+# herdr-plugin.toml — the norn project as one herdr plugin package: two pane
+# entrypoints (skald live feed, saga narrative) over one capture daemon.
+#
+# The recorder is NEVER a pane or a startup hook (estate sidecar rule):
+# `norn record` runs under a systemd user unit / LaunchAgent. See
+# docs/engineering/ARCHITECTURE.md.
+
+id = "herdr-norn"
+name = "norn · skald · saga"
+version = "0.1.0"
+description = "One honest scrollback per project across every agent pane: norn records, skald shows it live, saga keeps it."
+min_herdr_version = "0.8.0"
+platforms = ["linux", "macos"]
+
+[[build]]
+platforms = ["linux", "macos"]
+command = ["bash", "scripts/install.sh"]
+
+# The live merged feed pane.
+[[panes]]
+id = "skald"
+title = "skald"
+platforms = ["linux", "macos"]
+placement = "split"
+command = ["/bin/sh", "-c", "exec \"${HERDR_PLUGIN_ROOT:?not launched by herdr}/bin/skald\" view"]
+
+# The durable narrative pane (today's saga, followed live).
+[[panes]]
+id = "saga"
+title = "saga"
+platforms = ["linux", "macos"]
+placement = "split"
+command = ["/bin/sh", "-c", "exec \"${HERDR_PLUGIN_ROOT:?not launched by herdr}/bin/saga\" watch \"${NORN_PROJECT:-$(\"${HERDR_PLUGIN_ROOT}/bin/skald\" projects | tail -1)}\""]
+
+# Summon actions. Placement is chosen when the pane opens (bind the side you
+# want in config.toml). right/down are herdr's native splits.
+[[actions]]
+id = "open-skald"
+platforms = ["linux", "macos"]
+title = "Open skald (project feed)"
+description = "Open the live merged feed of the current project's agent panes in a split."
+contexts = ["workspace"]
+command = ["bash", "scripts/open-pane.sh", "skald", "right"]
+
+[[actions]]
+id = "open-skald-down"
+platforms = ["linux", "macos"]
+title = "Open skald (below)"
+description = "Open the live merged feed in a split below the current work."
+contexts = ["workspace"]
+command = ["bash", "scripts/open-pane.sh", "skald", "down"]
+
+[[actions]]
+id = "open-saga"
+platforms = ["linux", "macos"]
+title = "Open saga (project narrative)"
+description = "Open the durable per-project narrative in a split."
+contexts = ["workspace"]
+command = ["bash", "scripts/open-pane.sh", "saga", "right"]
+
+[[actions]]
+id = "open-saga-down"
+platforms = ["linux", "macos"]
+title = "Open saga (below)"
+description = "Open the durable per-project narrative in a split below the current work."
+contexts = ["workspace"]
+command = ["bash", "scripts/open-pane.sh", "saga", "down"]

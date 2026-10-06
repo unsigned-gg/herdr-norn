@@ -1,0 +1,19 @@
+$schema: "https://moonrepo.dev/schemas/tasks.json"
+
+# Shared Rust tasks, inherited by every crate project.
+tasks:
+  build:
+    command: cargo
+    args: ["build", "--release", "--locked"]
+    inputs: ["@globs(sources)"]
+  test:
+    command: cargo
+    args: ["test", "--locked"]
+    inputs: ["@globs(sources)"]
+  clippy:
+    command: cargo
+    args: ["clippy", "--all-targets", "--", "-D", "warnings"]
+    inputs: ["@globs(sources)"]
+  fmt:
+    command: cargo
+    args: ["fmt", "--all", "--check"]

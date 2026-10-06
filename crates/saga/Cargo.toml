@@ -1,0 +1,9 @@
+[package]
+name = "saga"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+norn-core = { path = "../norn-core" }
+norn-domain = { path = "../norn-domain" }
